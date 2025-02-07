@@ -1,30 +1,26 @@
 const express = require("express");
-const { SerialPort } = require("serialport");
-const { ReadlineParser } = require("@serialport/parser-readline");
-
 const app = express();
+
+// Middleware untuk membaca JSON dari body request
 app.use(express.json());
 
-const port = new SerialPort({
-    path: "COM4", // Sesuaikan dengan port Arduino
-    baudRate: 9600
-});
-const parser = port.pipe(new ReadlineParser());
-
+// Endpoint webhook dari Saweria
 app.post("/webhook", (req, res) => {
-    const { amount_raw, donator_name } = req.body;
-    
-    console.log(`Terima Kasih ${donator_name}`);
-    console.log(`Donasi masuk: Rp.${amount_raw}`);
-    
-    if (amount_raw >= 1000) {
-        port.write("FIRE\n"); // Kirim perintah ke Arduino
-        console.log("Mengaktifkan Money Gun Thrower!");
-    }
+    console.log("Webhook diterima dari Saweria:");
+    console.log(req.body); // Cetak data webhook ke terminal
 
-    res.sendStatus(200);
+    // Ambil nominal donasi
+    const { amount_raw, donator_name, message } = req.body;
+
+    console.log(`Donasi dari: ${donator_name}`);
+    console.log(`Nominal: Rp${amount_raw}`);
+    console.log(`Pesan: ${message}`);
+
+    res.sendStatus(200); // Kirim respons OK ke Saweria
 });
 
-// Jalankan server di PORT dari Railway
+// Konfigurasi server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Webhook listening on port ${PORT}`));
+
+// Jalankan server
+app.listen(PORT, () => console.log(`Server berjalan...`));
